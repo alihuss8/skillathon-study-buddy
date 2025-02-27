@@ -7,7 +7,7 @@ app = Flask(__name__)
 questions = {
     "Breed ID (Photos)": [
         # Cattle (ANLS p. 11-12, Breed ID p. 2-5)
-        {"question": "Identify the breed", "answer": "Holstein", "options": ["Holstein", "Jersey", "Guernsey", "Ayrshire"], "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Holstein_cow.jpg"},
+     {"question": "Identify the breed", "answer": "Holstein", "options": ["Holstein", "Jersey", "Guernsey", "Ayrshire"], "image": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Cow_female_black_white.jpg"},
         {"question": "Identify the breed", "answer": "Hereford", "options": ["Hereford", "Shorthorn", "Charolais", "Simmental"], "image": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Hereford_bull_large.jpg"},
         {"question": "Identify the breed", "answer": "Angus", "options": ["Angus", "Brangus", "Galloway", "Limousin"], "image": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Angus_cow_%28bred%29_standing_in_farm_yard.jpg"},
         {"question": "Identify the breed", "answer": "Jersey", "options": ["Jersey", "Holstein", "Guernsey", "Brown Swiss"], "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Jersey_cow_in_Jersey.jpg"},
