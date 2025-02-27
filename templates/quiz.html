@@ -17,7 +17,7 @@
     <p>Score: {{ score }} / {{ total }}</p>
     <h2>{{ question }}</h2>
     {% if image %}
-        <img src="{{ url_for('static', filename=image) }}" alt="Quiz Image">
+        <img src="{{ image }}" alt="Quiz Image">
     {% endif %}
     <form method="POST" action="/answer">
         {% for option in options %}
