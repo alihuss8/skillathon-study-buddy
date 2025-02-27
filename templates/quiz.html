@@ -1,31 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Skillathon Study Buddy</title>
+    <title>Skillathon Quiz</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #e6f3ff; margin: 0; padding: 20px; }
-        h1 { color: #ff6600; font-size: 40px; }
-        h2 { font-size: 30px; color: #333; }
-        button { padding: 15px 40px; margin: 10px; background-color: #ff9900; color: white; font-size: 24px; border: none; border-radius: 10px; cursor: pointer; }
-        button:hover { background-color: #e68a00; }
-        .feedback { font-size: 26px; font-weight: bold; }
-        img { max-width: 300px; height: auto; margin: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .option {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+            cursor: pointer;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        .option:hover {
+            background-color: #f9f9f9;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: block;
+        }
+        .green { color: green; }
+        .red { color: red; }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
-    <h1>Skillathon Study Buddy</h1>
-    <p>Score: {{ score }} / {{ total }}</p>
-    <h2>{{ question }}</h2>
-    {% if image %}
-        <img src="{{ image }}" alt="Quiz Image">
-    {% endif %}
-    <form method="POST" action="/answer">
-        {% for option in options %}
-            <button type="submit" name="answer" value="{{ option }}">{{ option }}</button><br>
-        {% endfor %}
-    </form>
-    {% if feedback %}
-        <p class="feedback" style="color: {{ feedback_color }}">{{ feedback }}</p>
-    {% endif %}
+    <div class="container">
+        <h1>Skillathon Quiz</h1>
+        <p>Score: {{ score }} / {{ total }}</p>
+        {% if image %}
+            <img src="{{ image | safe }}" alt="Quiz Image">
+        {% endif %}
+        <h2>{{ question }}</h2>
+        <form method="POST" action="/answer">
+            <div class="options-grid">
+                {% for option in options %}
+                    <button type="submit" name="answer" value="{{ option }}" class="option">{{ option }}</button>
+                {% endfor %}
+            </div>
+            {% if feedback %}
+                <div class="feedback {{ feedback_color }}">{{ feedback | safe }}</div>
+            {% endif %}
+        </form>
+        <a href="/restart">Restart Quiz</a>
+    </div>
 </body>
 </html>

@@ -74,7 +74,11 @@ def start_quiz():
     global current_quiz, score, question_index, selected_category
     selected_category = request.form['category']
     category_questions = questions[selected_category]
-    current_quiz = random.sample(category_questions, k=5 if len(category_questions) >= 5 else len(category_questions))
+    # Set quiz length to 15-20 questions
+    quiz_length = random.randint(15, 20)
+    # Repeat questions to meet length, then shuffle
+    current_quiz = category_questions * (quiz_length // len(category_questions)) + random.sample(category_questions, quiz_length % len(category_questions))
+    random.shuffle(current_quiz)  # Shuffle to avoid predictable repeats
     score = 0
     question_index = 0
     print(f"Starting quiz - Image: {current_quiz[0]['image']}, Total: {len(current_quiz)}")
