@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Skillathon Study Buddy</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #e6f3ff; margin: 0; padding: 20px; }
+        h1 { color: #ff6600; font-size: 40px; }
+        h2 { font-size: 30px; color: #333; }
+        button { padding: 15px 40px; margin: 10px; background-color: #ff9900; color: white; font-size: 24px; border: none; border-radius: 10px; cursor: pointer; }
+        button:hover { background-color: #e68a00; }
+        .feedback { font-size: 26px; font-weight: bold; }
+        img { max-width: 300px; height: auto; margin: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Skillathon Study Buddy</h1>
+    <p>Score: {{ score }} / {{ total }}</p>
+    <h2>{{ question }}</h2>
+    {% if image %}
+        <img src="{{ url_for('static', filename=image) }}" alt="Quiz Image">
+    {% endif %}
+    <form method="POST" action="/answer">
+        {% for option in options %}
+            <button type="submit" name="answer" value="{{ option }}">{{ option }}</button><br>
+        {% endfor %}
+    </form>
+    {% if feedback %}
+        <p class="feedback" style="color: {{ feedback_color }}">{{ feedback }}</p>
+    {% endif %}
+</body>
+</html>
