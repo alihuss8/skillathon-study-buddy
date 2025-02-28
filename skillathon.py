@@ -41,6 +41,9 @@ questions = {
     ]
 }
 
+# Global list to store answers temporarily
+answers_history = []
+
 @app.before_request
 def before_request():
     logger.info("Initializing session")
@@ -48,11 +51,9 @@ def before_request():
         session['quiz_state'] = {
             'score': 0,
             'question_index': 0,
-            'selected_category': '',
-            'current_question': None,
+            'category': '',
             'answered': False,
-            'quiz_questions': [],
-            'answers': []  # Store all answers for results
+            'question_order': []
         }
 
 def get_quiz_state():
@@ -60,6 +61,8 @@ def get_quiz_state():
 
 @app.route('/')
 def home():
+    global answers_history
+    answers_history = []
     logger.info("Rendering home page")
     return render_template('home.html', categories=questions.keys())
 
@@ -68,110 +71,115 @@ def start_quiz():
     quiz_state = get_quiz_state()
     quiz_state['score'] = 0
     quiz_state['question_index'] = 0
-    quiz_state['selected_category'] = request.form['category']
-    quiz_state['quiz_questions'] = random.sample(questions[quiz_state['selected_category']], len(questions[quiz_state['selected_category']]))  # Shuffle all questions once
-    quiz_state['current_question'] = quiz_state['quiz_questions'][0]
-    quiz_state['current_question']['shuffled_options'] = random.sample(quiz_state['current_question']['options'], len(quiz_state['current_question']['options']))
+    quiz_state['category'] = request.form['category']
+    quiz_state['question_order'] = list(range(len(questions[quiz_state['category']])))
+    random.shuffle(quiz_state['question_order'])
     quiz_state['answered'] = False
-    quiz_state['answers'] = []
     
     session['quiz_state'] = quiz_state
     session.modified = True
     
-    logger.info(f"Start: Q{quiz_state['question_index']+1}/{len(quiz_state['quiz_questions'])}, Score={quiz_state['score']}")
+    current_q = questions[quiz_state['category']][quiz_state['question_order'][quiz_state['question_index']]]
+    current_q['shuffled_options'] = random.sample(current_q['options'], len(current_q['options']))
+    
+    logger.info(f"Start: Q{quiz_state['question_index']+1}/{len(quiz_state['question_order'])}, Score={quiz_state['score']}")
     return render_template('quiz.html', 
-                          question=quiz_state['current_question']["question"],
-                          options=quiz_state['current_question']["shuffled_options"],
-                          image=quiz_state['current_question']["image"],
-                          score=quiz_state['score'],
-                          question_num=quiz_state['question_index'] + 1,
-                          total=len(quiz_state['quiz_questions']))
-
-@app.route('/answer', methods=['POST'])
-def answer():
-    quiz_state = get_quiz_state()
-    logger.info(f"Answer: Q{quiz_state['question_index']+1}/{len(quiz_state['quiz_questions'])}, Score={quiz_state['score']}, Answered={quiz_state['answered']}")
-
-    current_q = quiz_state['current_question']
-
-    # If already answered, move to next question
-    if quiz_state['answered']:
-        quiz_state['question_index'] += 1
-        if quiz_state['question_index'] >= len(quiz_state['quiz_questions']):
-            session['quiz_state'] = quiz_state
-            session.modified = True
-            logger.info(f"Quiz complete - Score={quiz_state['score']}")
-            return redirect(url_for('results'))
-
-        # Load next question
-        next_q = quiz_state['quiz_questions'][quiz_state['question_index']]
-        next_q['shuffled_options'] = random.sample(next_q['options'], len(next_q['options']))
-        quiz_state['current_question'] = next_q
-        quiz_state['answered'] = False
-        
-        session['quiz_state'] = quiz_state
-        session.modified = True
-        
-        logger.info(f"Next: Q{quiz_state['question_index']+1}/{len(quiz_state['quiz_questions'])}, Score={quiz_state['score']}")
-        return render_template('quiz.html',
-                              question=next_q["question"],
-                              options=next_q["shuffled_options"],
-                              image=next_q["image"],
-                              score=quiz_state['score'],
-                              question_num=quiz_state['question_index'] + 1,
-                              total=len(quiz_state['quiz_questions']))
-
-    # Process new answer
-    user_answer = request.form.get('answer', '')
-    correct_answer = current_q["answer"]
-    is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
-    
-    if is_correct:
-        quiz_state['score'] += 1
-        feedback = "Correct!"
-        feedback_color = "green"
-    else:
-        feedback = f"Incorrect. You chose '{user_answer}'. The correct answer is '{correct_answer}'."
-        feedback_color = "red"
-
-    # Store answer details
-    quiz_state['answers'].append({
-        'question': current_q["question"],
-        'image': current_q["image"],
-        'description': current_q["description"],
-        'user_answer': user_answer,
-        'correct_answer': correct_answer,
-        'is_correct': is_correct
-    })
-
-    quiz_state['answered'] = True
-    session['quiz_state'] = quiz_state
-    session.modified = True
-    
-    logger.info(f"Processed: User='{user_answer}', Correct='{correct_answer}', IsCorrect={is_correct}, NewScore={quiz_state['score']}, Feedback={feedback}")
-    
-    return render_template('quiz.html',
                           question=current_q["question"],
                           options=current_q["shuffled_options"],
                           image=current_q["image"],
                           score=quiz_state['score'],
                           question_num=quiz_state['question_index'] + 1,
-                          total=len(quiz_state['quiz_questions']),
-                          feedback=feedback,
-                          feedback_color=feedback_color,
-                          description=current_q["description"])
+                          total=len(quiz_state['question_order']))
+
+@app.route('/answer', methods=['POST'])
+def answer():
+    global answers_history
+    quiz_state = get_quiz_state()
+    total_questions = len(quiz_state.get('question_order', []))
+    logger.info(f"Answer: Q{quiz_state['question_index']+1}/{total_questions}, Score={quiz_state['score']}, Answered={quiz_state['answered']}")
+
+    current_q = questions[quiz_state['category']][quiz_state['question_order'][quiz_state['question_index']]]
+
+    # Process answer if not yet answered
+    if not quiz_state['answered']:
+        user_answer = request.form.get('answer', '')
+        correct_answer = current_q["answer"]
+        is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
+        
+        if is_correct:
+            quiz_state['score'] += 1
+            feedback = "Correct!"
+            feedback_color = "green"
+        else:
+            feedback = f"Incorrect. You chose '{user_answer}'. The correct answer is '{correct_answer}'."
+            feedback_color = "red"
+
+        # Store answer details outside session
+        answers_history.append({
+            'question': current_q["question"],
+            'image': current_q["image"],
+            'description': current_q["description"],
+            'user_answer': user_answer,
+            'correct_answer': correct_answer,
+            'is_correct': is_correct
+        })
+
+        quiz_state['answered'] = True
+        session['quiz_state'] = quiz_state
+        session.modified = True
+        
+        logger.info(f"Processed: User='{user_answer}', Correct='{correct_answer}', IsCorrect={is_correct}, NewScore={quiz_state['score']}, Feedback={feedback}")
+        
+        return render_template('quiz.html',
+                              question=current_q["question"],
+                              options=current_q["shuffled_options"],
+                              image=current_q["image"],
+                              score=quiz_state['score'],
+                              question_num=quiz_state['question_index'] + 1,
+                              total=total_questions,
+                              feedback=feedback,
+                              feedback_color=feedback_color,
+                              description=current_q["description"])
+
+    # Move to next question if answered
+    quiz_state['question_index'] += 1
+    if quiz_state['question_index'] >= total_questions:
+        session['quiz_state'] = quiz_state
+        session.modified = True
+        logger.info(f"Quiz complete - Score={quiz_state['score']}")
+        return redirect(url_for('results'))
+
+    next_q = questions[quiz_state['category']][quiz_state['question_order'][quiz_state['question_index']]]
+    next_q['shuffled_options'] = random.sample(next_q['options'], len(next_q['options']))
+    
+    quiz_state['answered'] = False
+    session['quiz_state'] = quiz_state
+    session.modified = True
+    
+    logger.info(f"Next: Q{quiz_state['question_index']+1}/{total_questions}, Score={quiz_state['score']}")
+    return render_template('quiz.html',
+                          question=next_q["question"],
+                          options=next_q["shuffled_options"],
+                          image=next_q["image"],
+                          score=quiz_state['score'],
+                          question_num=quiz_state['question_index'] + 1,
+                          total=total_questions)
 
 @app.route('/results')
 def results():
+    global answers_history
     quiz_state = get_quiz_state()
-    logger.info(f"Results: Score={quiz_state['score']}/{len(quiz_state['quiz_questions'])}")
+    total_questions = len(quiz_state.get('question_order', []))
+    logger.info(f"Results: Score={quiz_state['score']}/{total_questions}")
     return render_template('result.html', 
                           score=quiz_state['score'], 
-                          total=len(quiz_state['quiz_questions']),
-                          answers=quiz_state['answers'])
+                          total=total_questions,
+                          answers=answers_history)
 
 @app.route('/restart')
 def restart():
+    global answers_history
+    answers_history = []
     logger.info("Restarting quiz")
     session.pop('quiz_state', None)
     return redirect(url_for('home'))
