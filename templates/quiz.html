@@ -3,52 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz - Skillathon Study Buddy</title>
+    <title>Skillathon Quiz</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f4f4f4; }
-        .container { text-align: center; max-width: 800px; width: 100%; }
-        h1 { font-size: 1.8em; margin-bottom: 20px; color: #333; }
-        .image { max-width: 100%; height: auto; margin: 20px 0; border-radius: 5px; }
-        .feedback-section { margin: 20px 0; }
-        .feedback { font-size: 1.1em; margin-bottom: 15px; }
-        .description { font-size: 1em; color: black; margin-bottom: 20px; }
-        form { display: flex; flex-direction: column; align-items: center; }
-        .options { margin: 20px 0; width: 80%; max-width: 400px; text-align: left; }
-        .option { display: flex; align-items: center; margin: 15px 0; font-size: 1em; }
-        input[type="radio"] { margin-right: 10px; flex-shrink: 0; }
-        button { padding: 10px 20px; font-size: 1em; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        .score { margin-top: 20px; font-size: 1em; color: #333; }
-        @media (max-width: 768px) { h1 { font-size: 1.4em; } .options { width: 90%; } .option { font-size: 0.9em; margin: 10px 0; } button { padding: 8px 16px; font-size: 0.9em; } }
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .quiz-container {
+            display: flex;
+            flex-direction: row;
+            max-height: 90vh;
+            overflow: hidden;
+            gap: 20px;
+        }
+        .image-section {
+            flex: 1;
+            max-width: 40%;
+        }
+        .image-section img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+        }
+        .content-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .options {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .options li {
+            margin: 5px 0;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .description {
+            margin-top: 10px;
+            font-size: 0.9em;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .button {
+            margin-top: 10px;
+        }
+        /* Adjust content-section width when no image */
+        .full-width {
+            flex: 100%;
+            max-width: 100%;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Question {{ question_num }} of {{ total }}</h1>
-        <p>{{ question }}</p>
-        <img src="{{ image }}" alt="Feed Image" class="image">
-        {% if feedback %}
-            <div class="feedback-section">
-                <p class="feedback" style="color: {{ feedback_color }}">{{ feedback }}</p>
-                <p class="description">{{ description }}</p>
-            </div>
-            <form method="POST" action="/answer">
-                <button type="submit">Next Question</button>
-                <input type="hidden" name="answer" value="">
-            </form>
-        {% else %}
-            <form method="POST" action="/answer">
-                <div class="options">
-                    {% for option in options %}
-                        <label class="option">
-                            <input type="radio" name="answer" value="{{ option }}" required> {{ option }}
-                        </label>
-                    {% endfor %}
-                </div>
-                <button type="submit">Submit</button>
-            </form>
+    <div class="quiz-container">
+        {% if image %}
+        <div class="image-section">
+            <img src="{{ image }}" alt="Quiz Image">
+        </div>
         {% endif %}
-        <p class="score">Current Score: {{ score }} / {{ total }}</p>
+        <div class="content-section {% if not image %}full-width{% endif %}">
+            <div>
+                <p>Score: {{ score }} / {{ total }}</p>
+                <p>Question {{ question_num }} of {{ total }}</p>
+                <p class="question">{{ question }}</p>
+                <form method="POST" action="/answer">
+                    <ul class="options">
+                        {% for option in options %}
+                            <li><input type="radio" name="answer" value="{{ option }}" required> {{ option }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% if feedback %}
+                        <p class="feedback" style="color: {{ feedback_color }}">{{ feedback }}</p>
+                        <p class="description">{{ description }}</p>
+                        <button type="submit" class="button">Next Question</button>
+                    {% else %}
+                        <button type="submit" class="button">Submit Answer</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
     </div>
 </body>
 </html>

@@ -3,75 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skillathon Study Buddy</title>
+    <title>Skillathon Home</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
+            margin: 20px;
             text-align: center;
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto; /* Centers horizontally, sticks to top with padding */
         }
         h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
             color: #333;
         }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+        .dropdown-container {
+            margin: 20px 0;
         }
-        select {
+        select, button {
             padding: 10px;
-            font-size: 1em;
-            width: 80%;
-            max-width: 300px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            font-size: 16px;
+            margin: 5px;
+        }
+        #subsectionDropdown {
+            display: none; /* Hidden by default */
         }
         button {
-            padding: 10px 20px;
-            font-size: 1em;
             background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #45a049;
         }
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.5em;
-            }
-            select, button {
-                font-size: 0.9em;
-                padding: 8px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Skillathon Study Buddy</h1>
-        <form method="POST" action="/start">
-            <label for="category">Select a Quiz Category:</label>
-            <select name="category" id="category">
+    <h1>Welcome to the Skillathon Quiz</h1>
+    <p>Select a category to begin your quiz!</p>
+    
+    <form method="POST" action="/start">
+        <div class="dropdown-container">
+            <label for="category">Category:</label>
+            <select name="category" id="category" onchange="toggleSubsection()">
                 {% for category in categories %}
                     <option value="{{ category }}">{{ category }}</option>
                 {% endfor %}
             </select>
-            <button type="submit">Start Quiz</button>
-        </form>
-    </div>
+        </div>
+        
+        <div class="dropdown-container" id="subsectionDropdown">
+            <label for="subsection">Subsection:</label>
+            <select name="subsection" id="subsection">
+                <option value="Livestock Feed and Nutrition">Livestock Feed and Nutrition</option>
+                <option value="Animal Health">Animal Health</option>
+                <option value="Breeding and Genetics">Breeding and Genetics</option>
+                <option value="Livestock Management">Livestock Management</option>
+                <option value="Meat Science">Meat Science</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Poultry">Poultry</option>
+                <option value="Sheep and Goats">Sheep and Goats</option>
+                <option value="Swine">Swine</option>
+                <option value="Beef">Beef</option>
+            </select>
+        </div>
+        
+        <button type="submit">Start Quiz</button>
+    </form>
+
+    <script>
+        function toggleSubsection() {
+            var category = document.getElementById("category").value;
+            var subsectionDropdown = document.getElementById("subsectionDropdown");
+            if (category === "Questions") {
+                subsectionDropdown.style.display = "block";
+            } else {
+                subsectionDropdown.style.display = "none";
+            }
+        }
+        // Run on page load to set initial state
+        toggleSubsection();
+    </script>
 </body>
 </html>
