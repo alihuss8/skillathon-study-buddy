@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import random
 import logging
+import uuid
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -8,6 +9,9 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = 'abc123xyz'
+
+# Global dictionary to store quiz results per user
+quiz_results = {}  # Format: {"user_id": [{"image": "...", "description": "...", "is_correct": True}, ...]}
 
 questions = {
     "Feed Samples": [
@@ -51,7 +55,7 @@ def before_request():
             'category': '',
             'answered': False,
             'question_order': [],
-            'user_answers': []  # Store only user_answer and is_correct
+            'user_id': str(uuid.uuid4())  # Unique ID for this quiz session
         }
 
 def get_quiz_state():
@@ -61,8 +65,9 @@ def get_quiz_state():
 def home():
     logger.info("Rendering home page")
     quiz_state = get_quiz_state()
-    quiz_state['user_answers'] = []
-    session['quiz_state'] = quiz_state
+    # Clear any old results for this user_id
+    if 'user_id' in quiz_state:
+        quiz_results[quiz_state['user_id']] = []
     session.modified = True
     return render_template('home.html', categories=questions.keys())
 
@@ -75,7 +80,8 @@ def start_quiz():
     quiz_state['question_order'] = list(range(len(questions[quiz_state['category']])))
     random.shuffle(quiz_state['question_order'])
     quiz_state['answered'] = False
-    quiz_state['user_answers'] = []
+    quiz_state['user_id'] = str(uuid.uuid4())  # New unique ID for this quiz
+    quiz_results[quiz_state['user_id']] = []  # Initialize results for this user
     
     session['quiz_state'] = quiz_state
     session.modified = True
@@ -104,10 +110,11 @@ def answer():
 
         # Process answer if not yet answered
         if not quiz_state['answered']:
-            user_answer = request.form.get('answer', '')
-            if not user_answer:
-                logger.warning(f"No answer provided for Q{quiz_state['question_index']+1}")
-
+            user_answer = request.form.get('answer')
+            if not user_answer:  # Check if answer is None or empty
+                logger.warning("No answer provided in form data")
+                user_answer = ""  # Fallback to empty string
+            
             correct_answer = current_q["answer"]
             is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
             
@@ -119,9 +126,10 @@ def answer():
                 feedback = f"Incorrect. You chose '{user_answer}'. The correct answer is '{correct_answer}'."
                 feedback_color = "red"
 
-            # Store minimal data in session
-            quiz_state['user_answers'].append({
-                'user_answer': user_answer,
+            # Store results in quiz_results instead of session
+            quiz_results[quiz_state['user_id']].append({
+                'image': current_q["image"],
+                'description': current_q["description"],
                 'is_correct': is_correct
             })
 
@@ -174,30 +182,23 @@ def answer():
 def results():
     quiz_state = get_quiz_state()
     total_questions = len(quiz_state.get('question_order', []))
-    # Rebuild answers for display
-    answers = []
-    for i, ans in enumerate(quiz_state.get('user_answers', [])):
-        q = questions[quiz_state['category']][quiz_state['question_order'][i]]
-        answers.append({
-            'image': q["image"],
-            'description': q["description"],
-            'user_answer': ans['user_answer'],
-            'correct_answer': q["answer"],
-            'is_correct': ans['is_correct']
-        })
+    user_results = quiz_results.get(quiz_state['user_id'], [])
     logger.info(f"Results: Score={quiz_state['score']}/{total_questions}")
+    # Clean up quiz_results to avoid memory buildup
+    if quiz_state['user_id'] in quiz_results:
+        del quiz_results[quiz_state['user_id']]
     return render_template('result.html', 
                           score=quiz_state['score'], 
                           total=total_questions,
-                          answers=answers)
+                          answers=user_results)
 
 @app.route('/restart')
 def restart():
     logger.info("Restarting quiz")
     quiz_state = get_quiz_state()
-    quiz_state['user_answers'] = []
-    session['quiz_state'] = quiz_state
-    session.modified = True
+    # Clean up quiz_results for this user
+    if 'user_id' in quiz_state and quiz_state['user_id'] in quiz_results:
+        del quiz_results[quiz_state['user_id']]
     session.pop('quiz_state', None)
     return redirect(url_for('home'))
 
