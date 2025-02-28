@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+\from flask import Flask, render_template, request, redirect, url_for, session
 import random
 
 app = Flask(__name__)
@@ -43,7 +43,8 @@ def before_request():
             'score': 0,
             'question_index': 0,
             'selected_category': '',
-            'current_question': None  # Store only the current question
+            'current_question': None,
+            'answered': False  # Track if current question is answered
         }
 
 def get_quiz_state():
@@ -61,11 +62,12 @@ def start_quiz():
     quiz_state['selected_category'] = request.form['category']
     quiz_state['current_question'] = random.choice(questions[quiz_state['selected_category']])
     quiz_state['current_question']['shuffled_options'] = random.sample(quiz_state['current_question']['options'], len(quiz_state['current_question']['options']))
+    quiz_state['answered'] = False
     
     session['quiz_state'] = quiz_state
     session.modified = True
     
-    print(f"Start: Q{quiz_state['question_index']+1}, Score={quiz_state['score']}")
+    print(f"Start: Q{quiz_state['question_index']+1}/{len(questions[quiz_state['selected_category']])}, Score={quiz_state['score']}")
     return render_template('quiz.html', 
                           question=quiz_state['current_question']["question"],
                           options=quiz_state['current_question']["shuffled_options"],
@@ -77,9 +79,38 @@ def start_quiz():
 @app.route('/answer', methods=['POST'])
 def answer():
     quiz_state = get_quiz_state()
-    print(f"Answer: Q{quiz_state['question_index']+1}, Score={quiz_state['score']}")
+    print(f"Answer: Q{quiz_state['question_index']+1}/{len(questions[quiz_state['selected_category']])}, Score={quiz_state['score']}, Answered={quiz_state['answered']}")
 
     current_q = quiz_state['current_question']
+
+    # If already answered, move to next question
+    if quiz_state['answered']:
+        quiz_state['question_index'] += 1
+        if quiz_state['question_index'] >= len(questions[quiz_state['selected_category']]):
+            session['quiz_state'] = quiz_state
+            session.modified = True
+            print(f"Quiz complete - Score={quiz_state['score']}")
+            return redirect(url_for('results'))
+
+        # Load next question
+        next_q = random.choice([q for q in questions[quiz_state['selected_category']] if q['image'] != current_q['image']])
+        next_q['shuffled_options'] = random.sample(next_q['options'], len(next_q['options']))
+        quiz_state['current_question'] = next_q
+        quiz_state['answered'] = False
+        
+        session['quiz_state'] = quiz_state
+        session.modified = True
+        
+        print(f"Next: Q{quiz_state['question_index']+1}/{len(questions[quiz_state['selected_category']])}, Score={quiz_state['score']}")
+        return render_template('quiz.html',
+                              question=next_q["question"],
+                              options=next_q["shuffled_options"],
+                              image=next_q["image"],
+                              score=quiz_state['score'],
+                              question_num=quiz_state['question_index'] + 1,
+                              total=len(questions[quiz_state['selected_category']]))
+
+    # Process new answer
     user_answer = request.form.get('answer', '')
     correct_answer = current_q["answer"]
     is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
@@ -92,28 +123,16 @@ def answer():
         feedback = f"Incorrect. You chose '{user_answer}'. The correct answer is '{correct_answer}'."
         feedback_color = "red"
 
-    quiz_state['question_index'] += 1
-    if quiz_state['question_index'] >= len(questions[quiz_state['selected_category']]):
-        session['quiz_state'] = quiz_state
-        session.modified = True
-        print(f"Quiz complete - Score={quiz_state['score']}")
-        return redirect(url_for('results'))
-
-    # Load next question
-    next_q = random.choice([q for q in questions[quiz_state['selected_category']] if q['image'] != current_q['image']])
-    next_q['shuffled_options'] = random.sample(next_q['options'], len(next_q['options']))
-    quiz_state['current_question'] = next_q
-    
+    quiz_state['answered'] = True
     session['quiz_state'] = quiz_state
     session.modified = True
     
     print(f"Processed: User='{user_answer}', Correct='{correct_answer}', IsCorrect={is_correct}, NewScore={quiz_state['score']}, Feedback={feedback}")
-    print(f"Next: Q{quiz_state['question_index']+1}, Score={quiz_state['score']}")
     
     return render_template('quiz.html',
-                          question=next_q["question"],
-                          options=next_q["shuffled_options"],
-                          image=next_q["image"],
+                          question=current_q["question"],
+                          options=current_q["shuffled_options"],
+                          image=current_q["image"],
                           score=quiz_state['score'],
                           question_num=quiz_state['question_index'] + 1,
                           total=len(questions[quiz_state['selected_category']]),
