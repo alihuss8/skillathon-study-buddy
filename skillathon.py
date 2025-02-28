@@ -88,8 +88,10 @@ def answer():
     
     # Debug for all answers
     print(f"Question {quiz_state['question_index']+1}:")
+    print(f"  Current Question Image: {current_q['image']}")
     print(f"  You picked: '{user_answer}'")
     print(f"  Correct answer: '{correct_answer}'")
+    print(f"  Options: {current_q['options']}")
     print(f"  Match? {user_answer.strip().lower() == correct_answer.strip().lower()}")
 
     is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
@@ -127,7 +129,6 @@ def answer():
                               feedback_color=feedback_color)
     else:
         print(f"Quiz complete - Score: {quiz_state['score']}, Total: {len(quiz_state['current_quiz'])}")
-        # Show feedback for the last question before results
         return render_template('quiz.html',
                               question=current_q["question"],
                               options=current_q["options"],
@@ -137,7 +138,7 @@ def answer():
                               total=len(quiz_state['current_quiz']),
                               feedback=feedback,
                               feedback_color=feedback_color,
-                              show_results=True)  # Flag to show "View Results" button
+                              show_results=True)
 
 @app.route('/results')
 def results():
