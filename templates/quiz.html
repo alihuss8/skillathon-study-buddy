@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- For mobile responsiveness -->
-    <title>Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Skillathon Study Buddy</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,7 +17,7 @@
         }
         .container {
             text-align: center;
-            max-width: 800px; /* Wider for quiz content */
+            max-width: 800px;
             width: 100%;
         }
         h1 {
@@ -26,7 +26,7 @@
             color: #333;
         }
         .image {
-            max-width: 100%; /* Responsive image */
+            max-width: 100%;
             height: auto;
             margin: 20px 0;
             border-radius: 5px;
@@ -42,17 +42,20 @@
             align-items: center;
         }
         .options {
-            margin: 20px 0; /* Increased spacing around options */
+            margin: 20px 0;
             width: 80%;
             max-width: 400px;
+            text-align: left; /* Aligns radio buttons and text */
         }
         .option {
-            display: block;
-            margin: 15px 0; /* Increased spacing between options */
+            display: flex;
+            align-items: center; /* Vertically aligns radio with text */
+            margin: 15px 0;
             font-size: 1em;
         }
         input[type="radio"] {
             margin-right: 10px;
+            flex-shrink: 0; /* Prevents radio button from shrinking */
         }
         button {
             padding: 10px 20px;
@@ -91,7 +94,7 @@
             }
             .option {
                 font-size: 0.9em;
-                margin: 10px 0; /* Slightly less spacing on mobile */
+                margin: 10px 0;
             }
             button {
                 padding: 8px 16px;
