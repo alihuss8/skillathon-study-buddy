@@ -51,7 +51,7 @@ def before_request():
             'category': '',
             'answered': False,
             'question_order': [],
-            'answers': []
+            'answers': []  # Minimal data: score contribution only
         }
 
 def get_quiz_state():
@@ -104,7 +104,11 @@ def answer():
 
         # Process answer if not yet answered
         if not quiz_state['answered']:
-            user_answer = request.form.get('answer', '')
+            user_answer = request.form.get('answer')
+            if not user_answer:  # Check if answer is None or empty
+                logger.warning("No answer provided in form data")
+                user_answer = ""  # Fallback to empty string
+            
             correct_answer = current_q["answer"]
             is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
             
@@ -116,12 +120,10 @@ def answer():
                 feedback = f"Incorrect. You chose '{user_answer}'. The correct answer is '{correct_answer}'."
                 feedback_color = "red"
 
-            # Store minimal answer details in session
+            # Store minimal data in session (just for results)
             quiz_state['answers'].append({
                 'image': current_q["image"],
                 'description': current_q["description"],
-                'user_answer': user_answer,
-                'correct_answer': correct_answer,
                 'is_correct': is_correct
             })
 
