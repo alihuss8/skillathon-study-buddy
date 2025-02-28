@@ -33,124 +33,124 @@ questions = {
         {"question": "Identify the feed", "answer": "Buckwheat", "options": ["Buckwheat", "Wheat", "Barley", "Oats", "Milo", "Rye", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_41JMXdWaByeoA97", "description": "Buckwheat is primarily a human food crop, used in similar fashion to cereal grains such as wheat or oats. Buckwheat seeds are dehulled and the remaining seed material, call a groat, is ground into flour. The flour is often mixed with flour from other cereal grains to make breads, breakfast cereals or other multi-grain products. The protein content of dehulled buckwheat is about 12%, with only 2% fat. Buckwheat has roughly the feed value of oats when fed to livestock."},
         {"question": "Identify the feed", "answer": "Barley", "options": ["Barley", "Wheat", "Buckwheat", "Oats", "Milo", "Rye", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_bee4PEKLZhfTJul", "description": "Barley is ranked third among feed grains cultivated in the U.S. In the U.S. barley is used as the major cereal component in beef and dairy diets throughout much of the Great Lakes region, the northern plains and mountain states, the northwest coast and Alaska. Compared to most other grains barley has more protein and important vitamins and minerals. By-products generated during the brewing and distilling processes offer high quality and are widely used as feed ingredients. The barley plant can be made into whole-plant or head-chop ensilage."},
         {"question": "Identify the feed", "answer": "Blood Meal", "options": ["Blood Meal", "Fish Meal", "Cottonseed Meal", "Dried Whey", "Corn Gluten Meal", "Distiller’s Grain"], "image": "https://m.media-amazon.com/images/I/41lGr+Gc9tL._SY445_SX342_.jpg", "description": "Dried blood, high in protein (80-85%)."}
-         ]
-     }
+    ]
+}
 
-     @app.before_request
-     def before_request():
-         if 'quiz_state' not in session:
-             session['quiz_state'] = {
-                 'current_quiz': [],
-                 'score': 0,
-                 'question_index': 0,
-                 'selected_category': '',
-                 'answers': []  # Track user answers with correctness
-             }
+@app.before_request
+def before_request():
+    if 'quiz_state' not in session:
+        session['quiz_state'] = {
+            'current_quiz': [],
+            'score': 0,
+            'question_index': 0,
+            'selected_category': '',
+            'answers': []  # Track user answers with correctness
+        }
 
-     def get_quiz_state():
-         return session['quiz_state']
+def get_quiz_state():
+    return session['quiz_state']
 
-     @app.route('/')
-     def home():
-         return render_template('home.html', categories=questions.keys())
+@app.route('/')
+def home():
+    return render_template('home.html', categories=questions.keys())
 
-     @app.route('/start', methods=['POST'])
-     def start_quiz():
-         quiz_state = get_quiz_state()
-         quiz_state['current_quiz'] = []
-         quiz_state['score'] = 0
-         quiz_state['question_index'] = 0
-         quiz_state['selected_category'] = request.form['category']
-         quiz_state['answers'] = []  # Reset answers list
-         
-         category_questions = questions[quiz_state['selected_category']]
-         quiz_state['current_quiz'] = random.sample(category_questions, len(category_questions))  # All 26 questions
-         
-         print(f"Starting quiz - Image: {quiz_state['current_quiz'][0]['image']}, Total: {len(quiz_state['current_quiz'])}")
-         print("Loaded Questions:", {q["answer"]: q["options"] for q in quiz_state['current_quiz']})
-         session['quiz_state'] = quiz_state
-         
-         first_q = quiz_state['current_quiz'][0]
-         return render_template('quiz.html', 
-                              question=first_q["question"],
-                              options=first_q["options"],
-                              image=first_q["image"],
+@app.route('/start', methods=['POST'])
+def start_quiz():
+    quiz_state = get_quiz_state()
+    quiz_state['current_quiz'] = []
+    quiz_state['score'] = 0
+    quiz_state['question_index'] = 0
+    quiz_state['selected_category'] = request.form['category']
+    quiz_state['answers'] = []  # Reset answers list
+    
+    category_questions = questions[quiz_state['selected_category']]
+    quiz_state['current_quiz'] = random.sample(category_questions, len(category_questions))  # All 26 questions
+    
+    print(f"Starting quiz - Image: {quiz_state['current_quiz'][0]['image']}, Total: {len(quiz_state['current_quiz'])}")
+    print("Loaded Questions:", {q["answer"]: q["options"] for q in quiz_state['current_quiz']})
+    session['quiz_state'] = quiz_state
+    
+    first_q = quiz_state['current_quiz'][0]
+    return render_template('quiz.html', 
+                          question=first_q["question"],
+                          options=first_q["options"],
+                          image=first_q["image"],
+                          score=quiz_state['score'],
+                          question_num=quiz_state['question_index'] + 1,
+                          total=len(quiz_state['current_quiz']))
+
+@app.route('/answer', methods=['POST'])
+def answer():
+    quiz_state = get_quiz_state()
+    current_q = quiz_state['current_quiz'][quiz_state['question_index']]
+    user_answer = request.form['answer']
+    correct_answer = current_q["answer"]
+    
+    # Debug for all answers
+    print(f"Question {quiz_state['question_index']+1}:")
+    print(f"  You picked: '{user_answer}'")
+    print(f"  Correct answer: '{correct_answer}'")
+    print(f"  Match? {user_answer.strip().lower() == correct_answer.strip().lower()}")
+
+    is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
+    # Store answer details
+    quiz_state['answers'].append({
+        'question': current_q["question"],
+        'image': current_q["image"],
+        'user_answer': user_answer,
+        'correct_answer': correct_answer,
+        'is_correct': is_correct
+    })
+
+    if is_correct:
+        quiz_state['score'] += 1
+        feedback = "Correct"
+        feedback_color = "green"
+    else:
+        feedback = f"Incorrect. The correct answer is '{correct_answer}'."
+        feedback_color = "red"
+
+    quiz_state['question_index'] += 1
+    session['quiz_state'] = quiz_state
+    
+    if quiz_state['question_index'] < len(quiz_state['current_quiz']):
+        next_q = quiz_state['current_quiz'][quiz_state['question_index']]
+        print(f"Next - Index: {quiz_state['question_index']}, Image: {next_q['image']}")
+        return render_template('quiz.html',
+                              question=next_q["question"],
+                              options=next_q["options"],
+                              image=next_q["image"],
                               score=quiz_state['score'],
                               question_num=quiz_state['question_index'] + 1,
-                              total=len(quiz_state['current_quiz']))
+                              total=len(quiz_state['current_quiz']),
+                              feedback=feedback,
+                              feedback_color=feedback_color)
+    else:
+        print(f"Quiz complete - Score: {quiz_state['score']}, Total: {len(quiz_state['current_quiz'])}")
+        # Show feedback for the last question before results
+        return render_template('quiz.html',
+                              question=current_q["question"],
+                              options=current_q["options"],
+                              image=current_q["image"],
+                              score=quiz_state['score'],
+                              question_num=quiz_state['question_index'],
+                              total=len(quiz_state['current_quiz']),
+                              feedback=feedback,
+                              feedback_color=feedback_color,
+                              show_results=True)  # Flag to show "View Results" button
 
-     @app.route('/answer', methods=['POST'])
-     def answer():
-         quiz_state = get_quiz_state()
-         current_q = quiz_state['current_quiz'][quiz_state['question_index']]
-         user_answer = request.form['answer']
-         correct_answer = current_q["answer"]
-         
-         # Debug for all answers
-         print(f"Question {quiz_state['question_index']+1}:")
-         print(f"  You picked: '{user_answer}'")
-         print(f"  Correct answer: '{correct_answer}'")
-         print(f"  Match? {user_answer.strip().lower() == correct_answer.strip().lower()}")
+@app.route('/results')
+def results():
+    quiz_state = get_quiz_state()
+    return render_template('result.html', 
+                          score=quiz_state['score'], 
+                          total=len(quiz_state['current_quiz']),
+                          answers=quiz_state['answers'])
 
-         is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
-         # Store answer details
-         quiz_state['answers'].append({
-             'question': current_q["question"],
-             'image': current_q["image"],
-             'user_answer': user_answer,
-             'correct_answer': correct_answer,
-             'is_correct': is_correct
-         })
+@app.route('/restart')
+def restart():
+    session.pop('quiz_state', None)
+    return redirect(url_for('home'))
 
-         if is_correct:
-             quiz_state['score'] += 1
-             feedback = "Correct"
-             feedback_color = "green"
-         else:
-             feedback = f"Incorrect. The correct answer is '{correct_answer}'."
-             feedback_color = "red"
-
-         quiz_state['question_index'] += 1
-         session['quiz_state'] = quiz_state
-         
-         if quiz_state['question_index'] < len(quiz_state['current_quiz']):
-             next_q = quiz_state['current_quiz'][quiz_state['question_index']]
-             print(f"Next - Index: {quiz_state['question_index']}, Image: {next_q['image']}")
-             return render_template('quiz.html',
-                                  question=next_q["question"],
-                                  options=next_q["options"],
-                                  image=next_q["image"],
-                                  score=quiz_state['score'],
-                                  question_num=quiz_state['question_index'] + 1,
-                                  total=len(quiz_state['current_quiz']),
-                                  feedback=feedback,
-                                  feedback_color=feedback_color)
-         else:
-             print(f"Quiz complete - Score: {quiz_state['score']}, Total: {len(quiz_state['current_quiz'])}")
-             # Show feedback for the last question before results
-             return render_template('quiz.html',
-                                  question=current_q["question"],
-                                  options=current_q["options"],
-                                  image=current_q["image"],
-                                  score=quiz_state['score'],
-                                  question_num=quiz_state['question_index'],
-                                  total=len(quiz_state['current_quiz']),
-                                  feedback=feedback,
-                                  feedback_color=feedback_color,
-                                  show_results=True)  # Flag to show "View Results" button
-
-     @app.route('/results')
-     def results():
-         quiz_state = get_quiz_state()
-         return render_template('result.html', 
-                               score=quiz_state['score'], 
-                               total=len(quiz_state['current_quiz']),
-                               answers=quiz_state['answers'])
-
-     @app.route('/restart')
-     def restart():
-         session.pop('quiz_state', None)
-         return redirect(url_for('home'))
-
-     if __name__ == '__main__':
-         app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
