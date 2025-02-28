@@ -1,29 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- For mobile responsiveness -->
     <title>Quiz Results</title>
     <style>
-        .correct { color: green; }
-        .incorrect { color: red; }
-        img { max-width: 200px; height: auto; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .score {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .answers {
+            text-align: left;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+        }
+        .answer {
+            margin: 20px 0; /* Spacing between answer blocks */
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+        }
+        .answer img {
+            max-width: 100px; /* Small thumbnail */
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+        a {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        a:hover {
+            background-color: #45a049;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            .score {
+                font-size: 1.2em;
+            }
+            .answers {
+                width: 90%;
+            }
+            .answer {
+                padding: 10px;
+                margin: 15px 0;
+            }
+            .answer img {
+                max-width: 80px;
+            }
+            a {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Quiz Results</h1>
-    <p>Your Score: {{ score }} / {{ total }}</p>
-    <h2>Review Your Answers</h2>
-    {% for answer in answers %}
-        <div>
-            <img src="{{ answer.image }}" alt="Question image" onerror="this.style.display='none'">
-            <p>
-                {% if answer.is_correct %}
-                    <span class="correct">Correct</span>
-                {% else %}
-                    <span class="incorrect">Incorrect</span> - Your answer: {{ answer.user_answer }}. Correct answer: {{ answer.correct_answer }}
-                {% endif %}
-            </p>
+    <div class="container">
+        <h1>Quiz Results</h1>
+        <p class="score">Your Score: {{ score }} / {{ total }}</p>
+        <h2>Review Your Answers</h2>
+        <div class="answers">
+            {% for answer in answers %}
+                <div class="answer">
+                    <img src="{{ answer.image }}" alt="Feed Image">
+                    <p>{{ answer.question }}</p>
+                    <p>{{ answer.description }}</p>
+                    {% if answer.is_correct %}
+                        <span class="correct">Correct</span>
+                    {% else %}
+                        <span class="incorrect">Incorrect</span> - Your answer: {{ answer.user_answer }}. Correct answer: {{ answer.correct_answer }}
+                    {% endif %}
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-    <a href="/restart">Restart Quiz</a>
+        <a href="/restart">Restart Quiz</a>
+    </div>
 </body>
 </html>

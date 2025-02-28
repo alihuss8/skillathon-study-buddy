@@ -1,33 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- For mobile responsiveness -->
     <title>Quiz</title>
     <style>
-        .feedback-correct { color: green; }
-        .feedback-incorrect { color: red; }
-        img { max-width: 300px; height: auto; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            max-width: 800px; /* Wider for quiz content */
+            width: 100%;
+        }
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .image {
+            max-width: 100%; /* Responsive image */
+            height: auto;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .description {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .options {
+            margin: 20px 0; /* Increased spacing around options */
+            width: 80%;
+            max-width: 400px;
+        }
+        .option {
+            display: block;
+            margin: 15px 0; /* Increased spacing between options */
+            font-size: 1em;
+        }
+        input[type="radio"] {
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .feedback {
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .score {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #333;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.4em;
+            }
+            .options {
+                width: 90%;
+            }
+            .option {
+                font-size: 0.9em;
+                margin: 10px 0; /* Slightly less spacing on mobile */
+            }
+            button {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Question {{ question_num }} of {{ total }}</h1>
-    <h2>{{ question }}</h2>
-    <img src="{{ image }}" alt="Question image" onerror="this.style.display='none'">
-    <form method="post" action="/answer">
-        {% for option in options %}
-            <input type="radio" name="answer" value="{{ option }}" required> {{ option }}<br>
-        {% endfor %}
-        <input type="submit" value="Submit Answer">
-    </form>
-    {% if feedback %}
-        <p class="{{ 'feedback-correct' if feedback_color == 'green' else 'feedback-incorrect' }}">
-            {{ feedback }}
-        </p>
-        {% if show_results %}
-            <form method="get" action="/results">
-                <input type="submit" value="View Results">
-            </form>
+    <div class="container">
+        <h1>Question {{ question_num }} of {{ total }}</h1>
+        <p>{{ question }}</p>
+        <img src="{{ image }}" alt="Feed Image" class="image">
+        <p class="description">{{ description }}</p>
+        <form method="POST" action="/answer">
+            <div class="options">
+                {% for option in options %}
+                    <label class="option">
+                        <input type="radio" name="answer" value="{{ option }}" required> {{ option }}
+                    </label>
+                {% endfor %}
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+        {% if feedback %}
+            <p class="feedback" style="color: {{ feedback_color }}">{{ feedback }}</p>
+            {% if show_results %}
+                <p><a href="/results">View Results</a></p>
+            {% endif %}
         {% endif %}
-    {% endif %}
-    <p>Current Score: {{ score }} / {{ total }}</p>
+        <p class="score">Current Score: {{ score }} / {{ total }}</p>
+    </div>
 </body>
 </html>
