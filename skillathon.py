@@ -51,7 +51,7 @@ def before_request():
             'category': '',
             'answered': False,
             'question_order': [],
-            'answers': []  # Minimal data: score contribution only
+            'user_answers': []  # Store only user_answer and is_correct
         }
 
 def get_quiz_state():
@@ -61,7 +61,7 @@ def get_quiz_state():
 def home():
     logger.info("Rendering home page")
     quiz_state = get_quiz_state()
-    quiz_state['answers'] = []
+    quiz_state['user_answers'] = []
     session['quiz_state'] = quiz_state
     session.modified = True
     return render_template('home.html', categories=questions.keys())
@@ -75,7 +75,7 @@ def start_quiz():
     quiz_state['question_order'] = list(range(len(questions[quiz_state['category']])))
     random.shuffle(quiz_state['question_order'])
     quiz_state['answered'] = False
-    quiz_state['answers'] = []
+    quiz_state['user_answers'] = []
     
     session['quiz_state'] = quiz_state
     session.modified = True
@@ -104,11 +104,10 @@ def answer():
 
         # Process answer if not yet answered
         if not quiz_state['answered']:
-            user_answer = request.form.get('answer')
-            if not user_answer:  # Check if answer is None or empty
-                logger.warning("No answer provided in form data")
-                user_answer = ""  # Fallback to empty string
-            
+            user_answer = request.form.get('answer', '')
+            if not user_answer:
+                logger.warning(f"No answer provided for Q{quiz_state['question_index']+1}")
+
             correct_answer = current_q["answer"]
             is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
             
@@ -120,10 +119,9 @@ def answer():
                 feedback = f"Incorrect. You chose '{user_answer}'. The correct answer is '{correct_answer}'."
                 feedback_color = "red"
 
-            # Store minimal data in session (just for results)
-            quiz_state['answers'].append({
-                'image': current_q["image"],
-                'description': current_q["description"],
+            # Store minimal data in session
+            quiz_state['user_answers'].append({
+                'user_answer': user_answer,
                 'is_correct': is_correct
             })
 
@@ -176,17 +174,28 @@ def answer():
 def results():
     quiz_state = get_quiz_state()
     total_questions = len(quiz_state.get('question_order', []))
+    # Rebuild answers for display
+    answers = []
+    for i, ans in enumerate(quiz_state.get('user_answers', [])):
+        q = questions[quiz_state['category']][quiz_state['question_order'][i]]
+        answers.append({
+            'image': q["image"],
+            'description': q["description"],
+            'user_answer': ans['user_answer'],
+            'correct_answer': q["answer"],
+            'is_correct': ans['is_correct']
+        })
     logger.info(f"Results: Score={quiz_state['score']}/{total_questions}")
     return render_template('result.html', 
                           score=quiz_state['score'], 
                           total=total_questions,
-                          answers=quiz_state['answers'])
+                          answers=answers)
 
 @app.route('/restart')
 def restart():
     logger.info("Restarting quiz")
     quiz_state = get_quiz_state()
-    quiz_state['answers'] = []
+    quiz_state['user_answers'] = []
     session['quiz_state'] = quiz_state
     session.modified = True
     session.pop('quiz_state', None)
