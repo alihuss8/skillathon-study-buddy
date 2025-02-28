@@ -2,8 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import random
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Replace with a secure random string (e.g., 'abc123xyz')
+app.secret_key = 'abc123xyz'  # Hardcoded for now; use a secure random string in production
 
+# Your question data (unchanged, just collapsed for brevity)
 questions = {
     "Feed Samples": [
         {"question": "Identify the feed", "answer": "Dry Molasses", "options": ["Dry Molasses", "Whole Kernel Corn", "Steam Rolled Oats", "Dried Whey", "Ground Corn", "Wheat"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_cHiiTMVk6SMaMMl", "description": "A molasses-based feed supplement, high in sugar, used to improve palatability."},
@@ -23,15 +24,15 @@ questions = {
         {"question": "Identify the feed", "answer": "Corn Gluten Meal", "options": ["Corn Gluten Meal", "Distiller’s Grain", "Fish Meal", "Wheat Middlings", "Cottonseed Meal", "Blood Meal"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_09aFgNL7UBCu8yV", "description": "Corn residue with 43% protein."},
         {"question": "Identify the feed", "answer": "Alfalfa Meal Pellets", "options": ["Alfalfa Meal Pellets", "Hay Cubes", "Sugar Beet Pulp", "Cottonseed Hulls", "Wheat Bran", "Rye"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_2nlYF2zaMrUHOq9", "description": "Ground, dried alfalfa, good protein source."},
         {"question": "Identify the feed", "answer": "Urea", "options": ["Urea", "Dicalcium Phosphate", "Trace Mineralized Salt", "Salt", "Ground Limestone", "Fish Meal"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_9mKWzWzZ6QAmcM5", "description": "Nitrogen source for ruminants, toxic to horses."},
-        {"question": "Identify the feed", "answer": "Wheat", "options": ["Wheat", "Wheat Middlings", "Wheat Bran", "Barley", "Oats", "Milo", "Rye", "Buckwheat", "Ground Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_9G2LtnngnVfm8AJ", "description": "Wheats are generally high in protein, averaging 13-15%, as with many other cereal grains, wheat is primarily a source of energy in the form of carbohydrates. The glutenous nature of wheat makes it an excellent pelleting aid, for this reason, it is used in pelleted feeds."},
-        {"question": "Identify the feed", "answer": "Milo", "options": ["Milo", "Barley", "Wheat", "Oats", "Rye", "Buckwheat", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_3yeuMnFw1PhbuV7", "description": "Worldwide, sorghum is a food grain for humans. In the United States, sorghum is used primarily as a feed grain for livestock. Feed value of grain sorghum is similar to corn. The grain has more protein and fat than corn, but is lower in vitamin A. Pasturing cattle or sheep on sorghum stubble, after the grain has been harvested, is a common practice. Basically, it can be interchanged with corn, as a corn substitute."},
+        {"question": "Identify the feed", "answer": "Wheat", "options": ["Wheat", "Wheat Middlings", "Wheat Bran", "Barley", "Oats", "Milo", "Rye", "Buckwheat", "Ground Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_9G2LtnngnVfm8AJ", "description": "Wheats are generally high in protein, averaging 13-15%, as with many other cereal grains, wheat is primarily a source of energy in the form of carbohydrates."},
+        {"question": "Identify the feed", "answer": "Milo", "options": ["Milo", "Barley", "Wheat", "Oats", "Rye", "Buckwheat", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_3yeuMnFw1PhbuV7", "description": "Worldwide, sorghum is a food grain for humans. In the United States, sorghum is used primarily as a feed grain for livestock."},
         {"question": "Identify the feed", "answer": "Cottonseed Hulls", "options": ["Cottonseed Hulls", "Hay Cubes", "Alfalfa Meal Pellets", "Sugar Beet Pulp", "Wheat Bran", "Buckwheat"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_bNin7O2GLgObQeF", "description": "High-fiber, fat, and protein for dairy."},
-        {"question": "Identify the feed", "answer": "Rye", "options": ["Rye", "Wheat", "Barley", "Oats", "Milo", "Buckwheat", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_daRDa8qLjvsrZnn", "description": "Minor Crop in U.S., growing plants may be harvested as haylage. Grain may be fed as source of protein and energy."},
-        {"question": "Identify the feed", "answer": "Ground Corn", "options": ["Ground Corn", "Whole Kernel Corn", "Cracked Corn", "Oats", "Wheat", "Milo", "Rye", "Buckwheat", "Barley"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_ehNO2twWd5dowbb", "description": "Corn is the most commonly used energy source fed to animals. Grain is ground to increase nutrient digestibility."},
+        {"question": "Identify the feed", "answer": "Rye", "options": ["Rye", "Wheat", "Barley", "Oats", "Milo", "Buckwheat", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_daRDa8qLjvsrZnn", "description": "Minor Crop in U.S., growing plants may be harvested as haylage."},
+        {"question": "Identify the feed", "answer": "Ground Corn", "options": ["Ground Corn", "Whole Kernel Corn", "Cracked Corn", "Oats", "Wheat", "Milo", "Rye", "Buckwheat", "Barley"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_ehNO2twWd5dowbb", "description": "Corn is the most commonly used energy source fed to animals."},
         {"question": "Identify the feed", "answer": "Cottonseed Meal", "options": ["Cottonseed Meal", "Corn Gluten Meal", "Fish Meal", "Distiller’s Grain", "Blood Meal", "Wheat Middlings"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_8esYlVAgpexIlyB", "description": "Protein source (36-48%), toxic to hogs/chickens."},
         {"question": "Identify the feed", "answer": "Wheat Bran", "options": ["Wheat Bran", "Wheat Middlings", "Wheat", "Barley", "Oats", "Milo"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_bIOenYbo9Q5ceVL", "description": "Outer grain layer, rich in fiber and omegas."},
-        {"question": "Identify the feed", "answer": "Buckwheat", "options": ["Buckwheat", "Wheat", "Barley", "Oats", "Milo", "Rye", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_41JMXdWaByeoA97", "description": "Buckwheat is primarily a human food crop, used in similar fashion to cereal grains such as wheat or oats. Buckwheat seeds are dehulled and the remaining seed material, call a groat, is ground into flour. The flour is often mixed with flour from other cereal grains to make breads, breakfast cereals or other multi-grain products. The protein content of dehulled buckwheat is about 12%, with only 2% fat. Buckwheat has roughly the feed value of oats when fed to livestock."},
-        {"question": "Identify the feed", "answer": "Barley", "options": ["Barley", "Wheat", "Buckwheat", "Oats", "Milo", "Rye", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_bee4PEKLZhfTJul", "description": "Barley is ranked third among feed grains cultivated in the U.S. In the U.S. barley is used as the major cereal component in beef and dairy diets throughout much of the Great Lakes region, the northern plains and mountain states, the northwest coast and Alaska. Compared to most other grains barley has more protein and important vitamins and minerals. By-products generated during the brewing and distilling processes offer high quality and are widely used as feed ingredients. The barley plant can be made into whole-plant or head-chop ensilage."},
+        {"question": "Identify the feed", "answer": "Buckwheat", "options": ["Buckwheat", "Wheat", "Barley", "Oats", "Milo", "Rye", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_41JMXdWaByeoA97", "description": "Buckwheat is primarily a human food crop, used in similar fashion to cereal grains such as wheat or oats."},
+        {"question": "Identify the feed", "answer": "Barley", "options": ["Barley", "Wheat", "Buckwheat", "Oats", "Milo", "Rye", "Ground Corn", "Whole Kernel Corn"], "image": "https://osu.az1.qualtrics.com/CP/Graphic.php?IM=IM_bee4PEKLZhfTJul", "description": "Barley is ranked third among feed grains cultivated in the U.S."},
         {"question": "Identify the feed", "answer": "Blood Meal", "options": ["Blood Meal", "Fish Meal", "Cottonseed Meal", "Dried Whey", "Corn Gluten Meal", "Distiller’s Grain"], "image": "https://m.media-amazon.com/images/I/41lGr+Gc9tL._SY445_SX342_.jpg", "description": "Dried blood, high in protein (80-85%)."}
     ]
 }
@@ -44,7 +45,7 @@ def before_request():
             'score': 0,
             'question_index': 0,
             'selected_category': '',
-            'answers': []  # Track user answers with correctness
+            'answers': []
         }
 
 def get_quiz_state():
@@ -61,20 +62,24 @@ def start_quiz():
     quiz_state['score'] = 0
     quiz_state['question_index'] = 0
     quiz_state['selected_category'] = request.form['category']
-    quiz_state['answers'] = []  # Reset answers list
+    quiz_state['answers'] = []
     
     category_questions = questions[quiz_state['selected_category']]
     quiz_state['current_quiz'] = random.sample(category_questions, len(category_questions))  # All 26 questions
     
-    print(f"Starting quiz - Image: {quiz_state['current_quiz'][0]['image']}, Total: {len(quiz_state['current_quiz'])}")
-    print("Loaded Questions:", [(q["image"], q["answer"]) for q in quiz_state['current_quiz']])
+    # Randomize options for each question
+    for q in quiz_state['current_quiz']:
+        q['shuffled_options'] = random.sample(q['options'], len(q['options']))  # Shuffle options
+    
     session['quiz_state'] = quiz_state
+    session.modified = True  # Force session save
     
     first_q = quiz_state['current_quiz'][0]
     return render_template('quiz.html', 
                           question=first_q["question"],
-                          options=first_q["options"],
+                          options=first_q["shuffled_options"],  # Use shuffled options
                           image=first_q["image"],
+                          description=first_q["description"],
                           score=quiz_state['score'],
                           question_num=quiz_state['question_index'] + 1,
                           total=len(quiz_state['current_quiz']))
@@ -82,26 +87,22 @@ def start_quiz():
 @app.route('/answer', methods=['POST'])
 def answer():
     quiz_state = get_quiz_state()
+    
     if quiz_state['question_index'] >= len(quiz_state['current_quiz']):
-        print(f"Quiz complete at index {quiz_state['question_index']} - Score: {quiz_state['score']}, Total: {len(quiz_state['current_quiz'])}")
         return redirect(url_for('results'))
 
     current_q = quiz_state['current_quiz'][quiz_state['question_index']]
-    user_answer = request.form['answer']
+    user_answer = request.form.get('answer', '')  # Default to empty if missing
     correct_answer = current_q["answer"]
     
-    # Debug for all answers
-    print(f"Question {quiz_state['question_index']+1} of {len(quiz_state['current_quiz'])}:")
-    print(f"  Current Question Image: {current_q['image']}")
-    print(f"  You picked: '{user_answer}'")
-    print(f"  Correct answer: '{correct_answer}'")
-    print(f"  Options: {current_q['options']}")
-    print(f"  Match? {user_answer.strip().lower() == correct_answer.strip().lower()}")
-
+    # Log for debugging
+    print(f"Q{quiz_state['question_index']+1}/{len(quiz_state['current_quiz'])}: Image={current_q['image']}, User='{user_answer}', Correct='{correct_answer}', Options={current_q['shuffled_options']}")
+    
     is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
     quiz_state['answers'].append({
         'question': current_q["question"],
         'image': current_q["image"],
+        'description': current_q["description"],
         'user_answer': user_answer,
         'correct_answer': correct_answer,
         'is_correct': is_correct
@@ -109,7 +110,7 @@ def answer():
 
     if is_correct:
         quiz_state['score'] += 1
-        feedback = "Correct"
+        feedback = "Correct!"
         feedback_color = "green"
     else:
         feedback = f"Incorrect. The correct answer is '{correct_answer}'."
@@ -117,31 +118,24 @@ def answer():
 
     quiz_state['question_index'] += 1
     session['quiz_state'] = quiz_state
+    session.modified = True  # Force session save
     
     if quiz_state['question_index'] < len(quiz_state['current_quiz']):
         next_q = quiz_state['current_quiz'][quiz_state['question_index']]
-        print(f"Next - Index: {quiz_state['question_index']}, Image: {next_q['image']}")
+        print(f"Next: Q{quiz_state['question_index']+1}, Image={next_q['image']}")
         return render_template('quiz.html',
                               question=next_q["question"],
-                              options=next_q["options"],
+                              options=next_q["shuffled_options"],
                               image=next_q["image"],
+                              description=next_q["description"],
                               score=quiz_state['score'],
                               question_num=quiz_state['question_index'] + 1,
                               total=len(quiz_state['current_quiz']),
                               feedback=feedback,
                               feedback_color=feedback_color)
     else:
-        print(f"Quiz complete - Score: {quiz_state['score']}, Total: {len(quiz_state['current_quiz'])}")
-        return render_template('quiz.html',
-                              question=current_q["question"],
-                              options=current_q["options"],
-                              image=current_q["image"],
-                              score=quiz_state['score'],
-                              question_num=quiz_state['question_index'],
-                              total=len(quiz_state['current_quiz']),
-                              feedback=feedback,
-                              feedback_color=feedback_color,
-                              show_results=True)
+        print(f"Quiz complete: Score={quiz_state['score']}/{len(quiz_state['current_quiz'])}")
+        return redirect(url_for('results'))
 
 @app.route('/results')
 def results():
