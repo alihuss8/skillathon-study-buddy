@@ -82,12 +82,16 @@ def start_quiz():
 @app.route('/answer', methods=['POST'])
 def answer():
     quiz_state = get_quiz_state()
+    if quiz_state['question_index'] >= len(quiz_state['current_quiz']):
+        print("Error: question_index exceeded current_quiz length")
+        return redirect(url_for('results'))
+
     current_q = quiz_state['current_quiz'][quiz_state['question_index']]
     user_answer = request.form['answer']
     correct_answer = current_q["answer"]
     
     # Debug for all answers
-    print(f"Question {quiz_state['question_index']+1}:")
+    print(f"Question {quiz_state['question_index']+1} of {len(quiz_state['current_quiz'])}:")
     print(f"  Current Question Image: {current_q['image']}")
     print(f"  You picked: '{user_answer}'")
     print(f"  Correct answer: '{correct_answer}'")
@@ -95,7 +99,6 @@ def answer():
     print(f"  Match? {user_answer.strip().lower() == correct_answer.strip().lower()}")
 
     is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
-    # Store answer details
     quiz_state['answers'].append({
         'question': current_q["question"],
         'image': current_q["image"],
