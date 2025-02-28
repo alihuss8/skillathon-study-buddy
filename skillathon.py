@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import random
 
 app = Flask(__name__)
-app.secret_key = 'abc123xyz'  # Hardcoded for now; use a secure random string in production
+app.secret_key = 'abc123xyz'
 
 questions = {
     "Feed Samples": [
@@ -40,11 +40,10 @@ questions = {
 def before_request():
     if 'quiz_state' not in session:
         session['quiz_state'] = {
-            'current_quiz': [],
             'score': 0,
             'question_index': 0,
             'selected_category': '',
-            'answers': []
+            'current_question': None  # Store only the current question
         }
 
 def get_quiz_state():
@@ -57,73 +56,34 @@ def home():
 @app.route('/start', methods=['POST'])
 def start_quiz():
     quiz_state = get_quiz_state()
-    quiz_state['current_quiz'] = []
     quiz_state['score'] = 0
     quiz_state['question_index'] = 0
     quiz_state['selected_category'] = request.form['category']
-    quiz_state['answers'] = []
-    
-    category_questions = questions[quiz_state['selected_category']]
-    quiz_state['current_quiz'] = random.sample(category_questions, len(category_questions))
-    
-    for q in quiz_state['current_quiz']:
-        q['shuffled_options'] = random.sample(q['options'], len(q['options']))
+    quiz_state['current_question'] = random.choice(questions[quiz_state['selected_category']])
+    quiz_state['current_question']['shuffled_options'] = random.sample(quiz_state['current_question']['options'], len(quiz_state['current_question']['options']))
     
     session['quiz_state'] = quiz_state
     session.modified = True
     
-    first_q = quiz_state['current_quiz'][0]
+    print(f"Start: Q{quiz_state['question_index']+1}, Score={quiz_state['score']}")
     return render_template('quiz.html', 
-                          question=first_q["question"],
-                          options=first_q["shuffled_options"],
-                          image=first_q["image"],
-                          description=first_q["description"],
+                          question=quiz_state['current_question']["question"],
+                          options=quiz_state['current_question']["shuffled_options"],
+                          image=quiz_state['current_question']["image"],
                           score=quiz_state['score'],
                           question_num=quiz_state['question_index'] + 1,
-                          total=len(quiz_state['current_quiz']))
+                          total=len(questions[quiz_state['selected_category']]))
 
 @app.route('/answer', methods=['POST'])
 def answer():
     quiz_state = get_quiz_state()
-    
-    if quiz_state['question_index'] >= len(quiz_state['current_quiz']):
-        return redirect(url_for('results'))
+    print(f"Answer: Q{quiz_state['question_index']+1}, Score={quiz_state['score']}")
 
-    current_q = quiz_state['current_quiz'][quiz_state['question_index']]
+    current_q = quiz_state['current_question']
     user_answer = request.form.get('answer', '')
-
-    if 'answers' in quiz_state and quiz_state['answers'] and quiz_state['answers'][-1]['question'] == current_q["question"]:
-        quiz_state['question_index'] += 1
-        session['quiz_state'] = quiz_state
-        session.modified = True
-        if quiz_state['question_index'] < len(quiz_state['current_quiz']):
-            next_q = quiz_state['current_quiz'][quiz_state['question_index']]
-            print(f"Next: Q{quiz_state['question_index']+1}, Image={next_q['image']}")
-            return render_template('quiz.html',
-                                  question=next_q["question"],
-                                  options=next_q["shuffled_options"],
-                                  image=next_q["image"],
-                                  description=next_q["description"],
-                                  score=quiz_state['score'],
-                                  question_num=quiz_state['question_index'] + 1,
-                                  total=len(quiz_state['current_quiz']))
-        else:
-            print(f"Quiz complete: Score={quiz_state['score']}/{len(quiz_state['current_quiz'])}")
-            return redirect(url_for('results'))
-
     correct_answer = current_q["answer"]
-    print(f"Q{quiz_state['question_index']+1}/{len(quiz_state['current_quiz'])}: Image={current_q['image']}, User='{user_answer}', Correct='{correct_answer}', Options={current_q['shuffled_options']}")
-    
     is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
-    quiz_state['answers'].append({
-        'question': current_q["question"],
-        'image': current_q["image"],
-        'description': current_q["description"],
-        'user_answer': user_answer,
-        'correct_answer': correct_answer,
-        'is_correct': is_correct
-    })
-
+    
     if is_correct:
         quiz_state['score'] += 1
         feedback = "Correct!"
@@ -132,29 +92,43 @@ def answer():
         feedback = f"Incorrect. You chose '{user_answer}'. The correct answer is '{correct_answer}'."
         feedback_color = "red"
 
+    quiz_state['question_index'] += 1
+    if quiz_state['question_index'] >= len(questions[quiz_state['selected_category']]):
+        session['quiz_state'] = quiz_state
+        session.modified = True
+        print(f"Quiz complete - Score={quiz_state['score']}")
+        return redirect(url_for('results'))
+
+    # Load next question
+    next_q = random.choice([q for q in questions[quiz_state['selected_category']] if q['image'] != current_q['image']])
+    next_q['shuffled_options'] = random.sample(next_q['options'], len(next_q['options']))
+    quiz_state['current_question'] = next_q
+    
     session['quiz_state'] = quiz_state
     session.modified = True
     
+    print(f"Processed: User='{user_answer}', Correct='{correct_answer}', IsCorrect={is_correct}, NewScore={quiz_state['score']}, Feedback={feedback}")
+    print(f"Next: Q{quiz_state['question_index']+1}, Score={quiz_state['score']}")
+    
     return render_template('quiz.html',
-                          question=current_q["question"],
-                          options=current_q["shuffled_options"],
-                          image=current_q["image"],
-                          description=current_q["description"],
+                          question=next_q["question"],
+                          options=next_q["shuffled_options"],
+                          image=next_q["image"],
                           score=quiz_state['score'],
                           question_num=quiz_state['question_index'] + 1,
-                          total=len(quiz_state['current_quiz']),
+                          total=len(questions[quiz_state['selected_category']]),
                           feedback=feedback,
                           feedback_color=feedback_color,
-                          show_results=quiz_state['question_index'] + 1 == len(quiz_state['current_quiz']),
-                          user_answer=user_answer)
+                          description=current_q["description"])
 
 @app.route('/results')
 def results():
     quiz_state = get_quiz_state()
+    print(f"Results: Score={quiz_state['score']}/{len(questions[quiz_state['selected_category']])}")
     return render_template('result.html', 
                           score=quiz_state['score'], 
-                          total=len(quiz_state['current_quiz']),
-                          answers=quiz_state['answers'])
+                          total=len(questions[quiz_state['selected_category']]),
+                          answers=[{'description': quiz_state['current_question']['description'] if 'current_question' in quiz_state else ''}])
 
 @app.route('/restart')
 def restart():

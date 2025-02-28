@@ -5,105 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz - Skillathon Study Buddy</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f4f4f4;
-        }
-        .container {
-            text-align: center;
-            max-width: 800px;
-            width: 100%;
-        }
-        h1 {
-            font-size: 1.8em;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .image {
-            max-width: 100%;
-            height: auto;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-        .feedback-section {
-            margin: 20px 0; /* Spacing below photo */
-        }
-        .feedback {
-            font-size: 1.1em;
-            margin-bottom: 15px; /* Space between feedback and description */
-        }
-        .description {
-            font-size: 1em;
-            color: black; /* Explicitly black */
-            margin-bottom: 20px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .options {
-            margin: 20px 0;
-            width: 80%;
-            max-width: 400px;
-            text-align: left;
-        }
-        .option {
-            display: flex;
-            align-items: center;
-            margin: 15px 0;
-            font-size: 1em;
-        }
-        input[type="radio"] {
-            margin-right: 10px;
-            flex-shrink: 0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .score {
-            margin-top: 20px;
-            font-size: 1em;
-            color: #333;
-        }
-        a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.4em;
-            }
-            .options {
-                width: 90%;
-            }
-            .option {
-                font-size: 0.9em;
-                margin: 10px 0;
-            }
-            button {
-                padding: 8px 16px;
-                font-size: 0.9em;
-            }
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f4f4f4; }
+        .container { text-align: center; max-width: 800px; width: 100%; }
+        h1 { font-size: 1.8em; margin-bottom: 20px; color: #333; }
+        .image { max-width: 100%; height: auto; margin: 20px 0; border-radius: 5px; }
+        .feedback-section { margin: 20px 0; }
+        .feedback { font-size: 1.1em; margin-bottom: 15px; }
+        .description { font-size: 1em; color: black; margin-bottom: 20px; }
+        form { display: flex; flex-direction: column; align-items: center; }
+        .options { margin: 20px 0; width: 80%; max-width: 400px; text-align: left; }
+        .option { display: flex; align-items: center; margin: 15px 0; font-size: 1em; }
+        input[type="radio"] { margin-right: 10px; flex-shrink: 0; }
+        button { padding: 10px 20px; font-size: 1em; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .score { margin-top: 20px; font-size: 1em; color: #333; }
+        @media (max-width: 768px) { h1 { font-size: 1.4em; } .options { width: 90%; } .option { font-size: 0.9em; margin: 10px 0; } button { padding: 8px 16px; font-size: 0.9em; } }
     </style>
 </head>
 <body>
@@ -113,17 +29,13 @@
         <img src="{{ image }}" alt="Feed Image" class="image">
         {% if feedback %}
             <div class="feedback-section">
-                <p class="feedback" style="color: {% if feedback.startswith('Correct') %}green{% else %}red{% endif %}">{{ feedback }}</p>
+                <p class="feedback" style="color: {{ feedback_color }}">{{ feedback }}</p>
                 <p class="description">{{ description }}</p>
             </div>
-            {% if show_results %}
-                <p><a href="/results">View Results</a></p>
-            {% else %}
-                <form method="POST" action="/answer">
-                    <button type="submit">Next Question</button>
-                    <input type="hidden" name="answer" value="{{ user_answer }}">
-                </form>
-            {% endif %}
+            <form method="POST" action="/answer">
+                <button type="submit">Next Question</button>
+                <input type="hidden" name="answer" value="">
+            </form>
         {% else %}
             <form method="POST" action="/answer">
                 <div class="options">
