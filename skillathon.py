@@ -67,7 +67,7 @@ def start_quiz():
     quiz_state['current_quiz'] = random.sample(category_questions, len(category_questions))  # All 26 questions
     
     print(f"Starting quiz - Image: {quiz_state['current_quiz'][0]['image']}, Total: {len(quiz_state['current_quiz'])}")
-    print("Loaded Questions:", {q["answer"]: q["options"] for q in quiz_state['current_quiz']})
+    print("Loaded Questions:", [(q["image"], q["answer"]) for q in quiz_state['current_quiz']])
     session['quiz_state'] = quiz_state
     
     first_q = quiz_state['current_quiz'][0]
@@ -83,7 +83,7 @@ def start_quiz():
 def answer():
     quiz_state = get_quiz_state()
     if quiz_state['question_index'] >= len(quiz_state['current_quiz']):
-        print("Error: question_index exceeded current_quiz length")
+        print(f"Quiz complete at index {quiz_state['question_index']} - Score: {quiz_state['score']}, Total: {len(quiz_state['current_quiz'])}")
         return redirect(url_for('results'))
 
     current_q = quiz_state['current_quiz'][quiz_state['question_index']]
