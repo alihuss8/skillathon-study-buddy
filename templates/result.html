@@ -3,15 +3,27 @@
 <head>
     <title>Quiz Results</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f0f0f0; }
-        h1 { color: #4CAF50; }
-        button { padding: 10px; margin: 5px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #45a049; }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        img { max-width: 200px; height: auto; }
     </style>
 </head>
 <body>
-    <h1>Quiz Complete!</h1>
-    <p>Your score: {{ score }} / {{ total }}</p>
-    <a href="/restart"><button>Try Again</button></a>
+    <h1>Quiz Results</h1>
+    <p>Your Score: {{ score }} / {{ total }}</p>
+    <h2>Review Your Answers</h2>
+    {% for answer in answers %}
+        <div>
+            <img src="{{ answer.image }}" alt="Question image" onerror="this.style.display='none'">
+            <p>
+                {% if answer.is_correct %}
+                    <span class="correct">Correct</span>
+                {% else %}
+                    <span class="incorrect">Incorrect</span> - Your answer: {{ answer.user_answer }}. Correct answer: {{ answer.correct_answer }}
+                {% endif %}
+            </p>
+        </div>
+    {% endfor %}
+    <a href="/restart">Restart Quiz</a>
 </body>
 </html>
